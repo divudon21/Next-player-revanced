@@ -1,0 +1,92 @@
+name: Build APK & Release
+
+on:
+  push:
+    branches:
+      - arena/62d91bc7-next-player-revanced
+  workflow_dispatch:
+
+env:
+  RELEASE_TAG: v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: arena/62d91bc7-next-player-revanced
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install required SDK components
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-37" "build-tools;37.0.0" "platform-tools" || true
+          sdkmanager --list_installed 2>/dev/null | head -20 || true
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APKs (arm64-v8a, armeabi-v7a, universal)
+        working-directory: nextplayer
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease-with-debug-signing --stacktrace --no-configuration-cache
+
+      - name: Collect APKs
+        run: |
+          set -e
+          APK_DIR="nextplayer/app/build/outputs/apk/release-with-debug-signing"
+          echo "=== Built APKs ==="
+          ls -la "$APK_DIR"
+          mkdir -p release-apks
+          cp "$APK_DIR"/app-arm64-v8a-*.apk "release-apks/NextPlayer-v1.0.0-arm64-v8a.apk"
+          cp "$APK_DIR"/app-armeabi-v7a-*.apk "release-apks/NextPlayer-v1.0.0-armeabi-v7a.apk"
+          cp "$APK_DIR"/app-universal-*.apk "release-apks/NextPlayer-v1.0.0-universal.apk"
+          echo "=== Release APKs ==="
+          ls -la release-apks
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextplayer-apks
+          path: release-apks/*.apk
+
+      - name: Create / update GitHub Release v1.0.0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          NOTES=$(cat <<'EOF'
+          ## NextPlayer v1.0.0
+
+          ### APK files
+          - **NextPlayer-v1.0.0-universal.apk** — sabhi phones ke liye (saare ABIs)
+          - **NextPlayer-v1.0.0-arm64-v8a.apk** — modern 64-bit phones (recommended, sabse chhota size)
+          - **NextPlayer-v1.0.0-armeabi-v7a.apk** — purane 32-bit phones
+
+          Release build (minify + shrink) signed with bundled debug signing config.
+          EOF
+          )
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG exists, uploading assets (clobber)"
+            gh release upload "$RELEASE_TAG" release-apks/*.apk --clobber
+          else
+            echo "Creating release $RELEASE_TAG"
+            gh release create "$RELEASE_TAG" release-apks/*.apk \
+              --title "NextPlayer v1.0.0" \
+              --target "${GITHUB_REF_NAME}" \
+              --notes "$NOTES"
+          fi
+          gh release view "$RELEASE_TAG"
