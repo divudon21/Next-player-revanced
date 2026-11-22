@@ -1,20 +1,0 @@
-+ cd /home/runner/work/Next-player-revanced/Next-player-revanced
-+ ok=0
-+ curl -fSL --retry 3 --connect-timeout 20 https://files.catbox.moe/v516w0.zip -o src.zip
-  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
-                                 Dload  Upload  Total   Spent   Left   Speed
-  0      0   0      0   0      0      0      0                              0100  8.30M 100  8.30M   0      0 13.30M      0                              0100  8.30M 100  8.30M   0      0 13.30M      0                              0100  8.30M 100  8.30M   0      0 13.30M      0                              0
-+ unzip -t src.zip
-+ ok=1
-+ echo 'catbox ok=1'
-catbox ok=1
-+ '[' 1 = 0 ']'
-+ '[' 1 '!=' 1 ']'
-+ ls -la src.zip
--rw-r--r-- 1 runner runner 8707000 Nov 22 08:37 src.zip
-SRCROOT=/tmp/src
-total 16
-drwxr-xr-x  3 runner runner 4096 Nov 22 08:37 .
-drwxrwxrwt 12 root   root   4096 Nov 22 08:37 ..
--rw-------  1 runner runner 2084 Nov 22 08:06 START_HERE.md
-drwxr-xr-x 11 runner runner 4096 Nov 22 08:37 nextplayer
