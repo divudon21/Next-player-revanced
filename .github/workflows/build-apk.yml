@@ -27,7 +27,7 @@ jobs:
           java-version: "21"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android-sdk@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install required SDK components
         run: |
