@@ -1,6 +1,9 @@
 name: Fetch Source Code
 
 on:
+  push:
+    branches:
+      - arena/62d91bc7-next-player-revanced
   workflow_dispatch:
 
 jobs:
@@ -14,7 +17,18 @@ jobs:
         with:
           ref: arena/62d91bc7-next-player-revanced
 
+      - name: Check if source already fetched
+        id: guard
+        run: |
+          if ls settings.gradle* 2>/dev/null | grep -q .; then
+            echo "Source already present, skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download source zip from Gofile
+        if: steps.guard.outputs.skip != 'true'
         run: |
           set -x
           cd "$GITHUB_WORKSPACE"
@@ -52,6 +66,7 @@ jobs:
           ls -la src.zip
 
       - name: Extract source
+        if: steps.guard.outputs.skip != 'true'
         run: |
           set -e
           cd "$GITHUB_WORKSPACE"
@@ -70,6 +85,7 @@ jobs:
           rsync -a --exclude='.git' "$SRCROOT"/ "$GITHUB_WORKSPACE"/
 
       - name: Commit and push source
+        if: steps.guard.outputs.skip != 'true'
         run: |
           set -e
           cd "$GITHUB_WORKSPACE"
