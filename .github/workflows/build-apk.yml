@@ -3,6 +3,7 @@ name: Build APK & Release
 on:
   push:
     branches:
+      - main
       - arena/62d91bc7-next-player-revanced
   workflow_dispatch:
 
