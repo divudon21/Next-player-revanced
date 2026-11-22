@@ -27,35 +27,34 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download source zip from Gofile
+      - name: Download source zip (catbox, gofile fallback)
         if: steps.guard.outputs.skip != 'true'
         run: |
+          exec > >(tee fetch-log.txt) 2>&1
           set -x
           cd "$GITHUB_WORKSPACE"
-          DIRECT='https://store-eu-par-6.gofile.io/download/web/e81e2551-f6a9-47fc-a9ae-c3c5fd0ad333/NextPlayer-Complete-Source-All-ABI%20(2).zip'
-          TOKEN=$(curl -s -X POST https://api.gofile.io/accounts | jq -r '.data.token')
-          echo "token length: ${#TOKEN}"
           ok=0
-          # Attempt 1: direct link with account cookie + bearer
-          curl -sL --retry 3 -H "Cookie: accountToken=$TOKEN" -H "Authorization: Bearer $TOKEN" "$DIRECT" -o src.zip && unzip -t src.zip >/dev/null 2>&1 && ok=1
-          echo "attempt1 ok=$ok"
-          # Attempt 2: direct link plain
+          # Attempt 1: catbox direct link
+          curl -fSL --retry 3 --connect-timeout 20 "https://files.catbox.moe/v516w0.zip" -o src.zip && unzip -t src.zip >/dev/null 2>&1 && ok=1
+          echo "catbox ok=$ok"
+          # Attempt 2: gofile API flow
           if [ "$ok" = 0 ]; then
-            curl -sL --retry 3 "$DIRECT" -o src.zip && unzip -t src.zip >/dev/null 2>&1 && ok=1
-            echo "attempt2 ok=$ok"
-          fi
-          # Attempt 3: Gofile API (both known content ids)
-          if [ "$ok" = 0 ]; then
-            for ID in Z9bQpXzw zBOKSKid; do
-              curl -s -H "Authorization: Bearer $TOKEN" "https://api.gofile.io/contents/$ID" -o meta.json
-              cat meta.json | head -c 500; echo
-              LINKS=$(jq -r '.. | objects | .link? // empty' meta.json | sort -u)
-              echo "links: $LINKS"
-              for L in $LINKS; do
-                curl -sL --retry 3 -H "Cookie: accountToken=$TOKEN" "$L" -o src.zip && unzip -t src.zip >/dev/null 2>&1 && ok=1 && break
+            TOKEN=$(curl -s -X POST https://api.gofile.io/accounts | jq -r '.data.token')
+            echo "gofile token length: ${#TOKEN}"
+            DIRECT='https://store-eu-par-6.gofile.io/download/web/e81e2551-f6a9-47fc-a9ae-c3c5fd0ad333/NextPlayer-Complete-Source-All-ABI%20(2).zip'
+            curl -sL --retry 3 -H "Cookie: accountToken=$TOKEN" -H "Authorization: Bearer $TOKEN" "$DIRECT" -o src.zip && unzip -t src.zip >/dev/null 2>&1 && ok=1
+            echo "gofile direct ok=$ok"
+            if [ "$ok" = 0 ]; then
+              for ID in Z9bQpXzw zBOKSKid; do
+                curl -s -H "Authorization: Bearer $TOKEN" "https://api.gofile.io/contents/$ID" -o meta.json
+                head -c 400 meta.json; echo
+                LINKS=$(jq -r '.. | objects | .link? // empty' meta.json | sort -u)
+                for L in $LINKS; do
+                  curl -sL --retry 3 -H "Cookie: accountToken=$TOKEN" "$L" -o src.zip && unzip -t src.zip >/dev/null 2>&1 && ok=1 && break
+                done
+                [ "$ok" = 1 ] && break
               done
-              [ "$ok" = 1 ] && break
-            done
+            fi
           fi
           if [ "$ok" != 1 ]; then
             echo "DOWNLOAD FAILED"
@@ -80,12 +79,12 @@ jobs:
           else
             SRCROOT="/tmp/src"
           fi
-          echo "SRCROOT=$SRCROOT"
-          ls -la "$SRCROOT" | head -40
+          echo "SRCROOT=$SRCROOT" | tee -a fetch-log.txt
+          ls -la "$SRCROOT" | tee -a fetch-log.txt
           rsync -a --exclude='.git' "$SRCROOT"/ "$GITHUB_WORKSPACE"/
 
       - name: Commit and push source
-        if: steps.guard.outputs.skip != 'true'
+        if: always() && steps.guard.outputs.skip != 'true'
         run: |
           set -e
           cd "$GITHUB_WORKSPACE"
@@ -96,5 +95,5 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "Add NextPlayer app source code (from Gofile zip)"
+          git commit -m "Add NextPlayer app source code"
           git push origin HEAD:arena/62d91bc7-next-player-revanced
