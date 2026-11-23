@@ -245,6 +245,7 @@ fun NextPlayerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     highContrastDarkTheme: Boolean = false,
     dynamicColor: Boolean = true,
+    appThemeColor: dev.anilbeesetti.nextplayer.core.model.AppThemeColor = dev.anilbeesetti.nextplayer.core.model.AppThemeColor.TEAL,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
@@ -283,9 +284,41 @@ fun NextPlayerTheme(
             surfaceContainerHighest = surfaceContainerHighestPureBlack,
         )
 
-        darkTheme -> darkScheme
+        darkTheme -> {
+            val baseScheme = getAppColorScheme(appThemeColor, isDark = true)
+            darkScheme.copy(
+                primary = baseScheme.primary,
+                onPrimary = baseScheme.onPrimary,
+                primaryContainer = baseScheme.primaryContainer,
+                onPrimaryContainer = baseScheme.onPrimaryContainer,
+                secondary = baseScheme.secondary,
+                onSecondary = baseScheme.onSecondary,
+                secondaryContainer = baseScheme.secondaryContainer,
+                onSecondaryContainer = baseScheme.onSecondaryContainer,
+                tertiary = baseScheme.tertiary,
+                onTertiary = baseScheme.onTertiary,
+                tertiaryContainer = baseScheme.tertiaryContainer,
+                onTertiaryContainer = baseScheme.onTertiaryContainer,
+            )
+        }
 
-        else -> lightScheme
+        else -> {
+            val baseScheme = getAppColorScheme(appThemeColor, isDark = false)
+            lightScheme.copy(
+                primary = baseScheme.primary,
+                onPrimary = baseScheme.onPrimary,
+                primaryContainer = baseScheme.primaryContainer,
+                onPrimaryContainer = baseScheme.onPrimaryContainer,
+                secondary = baseScheme.secondary,
+                onSecondary = baseScheme.onSecondary,
+                secondaryContainer = baseScheme.secondaryContainer,
+                onSecondaryContainer = baseScheme.onSecondaryContainer,
+                tertiary = baseScheme.tertiary,
+                onTertiary = baseScheme.onTertiary,
+                tertiaryContainer = baseScheme.tertiaryContainer,
+                onTertiaryContainer = baseScheme.onTertiaryContainer,
+            )
+        }
     }
 
     MaterialTheme(
