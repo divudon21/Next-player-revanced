@@ -566,4 +566,18 @@
         <item quantity="one">%1$d day</item>
         <item quantity="other">%1$d days</item>
     </plurals>
+    <string name="app_color">App color</string>
+    <string name="app_color_desc">Choose custom accent theme color</string>
+    <string name="color_teal">Teal (Default)</string>
+    <string name="color_crimson">Crimson Red</string>
+    <string name="color_ocean_blue">Ocean Blue</string>
+    <string name="color_emerald_green">Emerald Green</string>
+    <string name="color_violet">Deep Violet</string>
+    <string name="color_sunset_orange">Sunset Orange</string>
+    <string name="color_amber_gold">Amber Gold</string>
+    <string name="color_rose_pink">Rose Pink</string>
+    <string name="color_cyan">Sky Cyan</string>
+    <string name="color_indigo">Electric Indigo</string>
+    <string name="color_lime">Vibrant Lime</string>
+    <string name="color_sakura">Sakura</string>
 </resources>
