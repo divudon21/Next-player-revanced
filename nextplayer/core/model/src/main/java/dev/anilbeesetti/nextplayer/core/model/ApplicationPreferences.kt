@@ -9,6 +9,7 @@ data class ApplicationPreferences(
     val themeConfig: ThemeConfig = ThemeConfig.SYSTEM,
     val useHighContrastDarkTheme: Boolean = false,
     val useDynamicColors: Boolean = true,
+    val appThemeColor: AppThemeColor = AppThemeColor.TEAL,
     val markLastPlayedMedia: Boolean = true,
     val isHistoryPaused: Boolean = false,
     val includeNetworkWatchHistory: Boolean = true,

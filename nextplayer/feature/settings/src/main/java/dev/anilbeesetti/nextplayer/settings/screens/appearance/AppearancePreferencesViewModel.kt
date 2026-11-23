@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import dev.anilbeesetti.nextplayer.core.data.repository.PreferencesRepository
 import dev.anilbeesetti.nextplayer.core.model.ApplicationPreferences
+import dev.anilbeesetti.nextplayer.core.model.AppThemeColor
 import dev.anilbeesetti.nextplayer.core.model.ThemeConfig
 import dev.anilbeesetti.nextplayer.core.ui.base.MviViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +52,9 @@ class AppearancePreferencesViewModel(
 
             is AppearancePreferencesEvent.ToggleUseHighContrastDarkTheme ->
                 toggleUseHighContrastDarkTheme()
+
+            is AppearancePreferencesEvent.UpdateAppThemeColor ->
+                updateAppThemeColor(action.appThemeColor)
         }
     }
 
@@ -88,6 +92,14 @@ class AppearancePreferencesViewModel(
         }
     }
 
+    private fun updateAppThemeColor(appThemeColor: AppThemeColor) {
+        viewModelScope.launch {
+            preferencesRepository.updateApplicationPreferences {
+                it.copy(appThemeColor = appThemeColor)
+            }
+        }
+    }
+
     private fun toggleUseHighContrastDarkTheme() {
         viewModelScope.launch {
             preferencesRepository.updateApplicationPreferences {
@@ -111,8 +123,10 @@ sealed interface AppearancePreferencesEvent {
     data class UpdateThemeConfig(val themeConfig: ThemeConfig) : AppearancePreferencesEvent
     data object ToggleUseDynamicColors : AppearancePreferencesEvent
     data object ToggleUseHighContrastDarkTheme : AppearancePreferencesEvent
+    data class UpdateAppThemeColor(val appThemeColor: AppThemeColor) : AppearancePreferencesEvent
 }
 
 sealed interface AppearancePreferenceDialog {
     data object Theme : AppearancePreferenceDialog
+    data object AppColor : AppearancePreferenceDialog
 }
