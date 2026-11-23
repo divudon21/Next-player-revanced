@@ -1,5 +1,20 @@
 package dev.anilbeesetti.nextplayer.settings.screens.appearance
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import dev.anilbeesetti.nextplayer.core.model.AppThemeColor
+import dev.anilbeesetti.nextplayer.core.ui.components.ClickablePreferenceItem
+import dev.anilbeesetti.nextplayer.core.ui.theme.displayName
+import dev.anilbeesetti.nextplayer.core.ui.theme.previewColor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -113,6 +128,15 @@ private fun AppearancePreferencesScreenContent(
                     onClick = {
                         onAction(AppearancePreferencesEvent.ToggleUseHighContrastDarkTheme)
                     },
+                    isLastItem = false,
+                )
+                ClickablePreferenceItem(
+                    title = stringResource(R.string.app_color),
+                    description = state.preferences.appThemeColor.displayName(),
+                    icon = NextIcons.Appearance,
+                    onClick = {
+                        onAction(AppearancePreferencesEvent.ShowDialog(value = AppearancePreferenceDialog.AppColor))
+                    },
                     isLastItem = !supportsDynamicTheming(),
                 )
                 if (supportsDynamicTheming()) {
@@ -150,6 +174,58 @@ private fun AppearancePreferencesScreenContent(
                                     onAction(AppearancePreferencesEvent.ShowDialog(value = null))
                                 },
                             )
+                        }
+                    }
+                }
+                AppearancePreferenceDialog.AppColor -> {
+                    OptionsDialog(
+                        text = stringResource(id = R.string.app_color),
+                        onDismissClick = {
+                            onAction(AppearancePreferencesEvent.ShowDialog(value = null))
+                        },
+                    ) {
+                        items(AppThemeColor.entries.toTypedArray()) { colorOption ->
+                            val isSelected = (colorOption == state.preferences.appThemeColor)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onAction(
+                                            AppearancePreferencesEvent.UpdateAppThemeColor(
+                                                appThemeColor = colorOption,
+                                            ),
+                                        )
+                                        onAction(AppearancePreferencesEvent.ShowDialog(value = null))
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(color = colorOption.previewColor())
+                                        .border(
+                                            width = if (isSelected) 2.5.dp else 1.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                            shape = CircleShape,
+                                        ),
+                                )
+                                Text(
+                                    text = colorOption.displayName(),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = NextIcons.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
